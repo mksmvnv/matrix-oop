@@ -18,15 +18,21 @@ Matrix::Matrix(Matrix &&other)
     other.SetNull();
 }
 
-void Matrix::SetNull() {
-    matrix_ = nullptr;
-    rows_ = 0;
-    cols_ = 0;
-}
-
 Matrix::~Matrix() { DestroyMatrix(); }
 
 // Operators
+
+Matrix Matrix::operator+(const Matrix &other) {
+    Matrix temp(*this);
+    temp.SumMatrix(other);
+    return temp;
+}
+
+Matrix Matrix::operator-(const Matrix &other) {
+    Matrix temp(*this);
+    temp.SubMatrix(other);
+    return temp;
+}
 
 Matrix Matrix::operator=(const Matrix &other) {
     DestroyMatrix();
@@ -49,18 +55,6 @@ Matrix Matrix::operator=(Matrix &&other) {
         other.cols_ = 0;
     }
     return *this;
-}
-
-Matrix Matrix::operator+(const Matrix &other) {
-    Matrix temp(*this);
-    temp.SumMatrix(other);
-    return temp;
-}
-
-Matrix Matrix::operator-(const Matrix &other) {
-    Matrix temp(*this);
-    temp.SubMatrix(other);
-    return temp;
 }
 
 bool Matrix::operator==(const Matrix &other) { return EqMatrix(other); }
@@ -91,16 +85,10 @@ Matrix Matrix::operator*(const Matrix &other) {
     return temp;
 }
 
-Matrix Matrix::operator*(double num) {
+Matrix Matrix::operator*(const double num) {
     Matrix temp(*this);
     temp.MulNumber(num);
     return temp;
-}
-
-Matrix operator*(double num, Matrix &other) {
-    Matrix resultMatrix(other);
-    resultMatrix.MulNumber(num);
-    return resultMatrix;
 }
 
 double &Matrix::operator()(int rows, int columns) {
@@ -111,6 +99,66 @@ double &Matrix::operator()(int rows, int columns) {
 }
 
 // Methods
+
+int Matrix::EqualMatrix(const Matrix &other) {
+    return (other.cols_ == this->cols_) && (other.rows_ == this->rows_);
+}
+
+void Matrix::SumMatrix(const Matrix &other) {
+    if (!EqualMatrix(other)) {
+        throw std::invalid_argument("\nRows and columns do not match\n");
+    }
+    for (int i = 0; i < rows_; ++i) {
+        for (int j = 0; j < cols_; ++j) {
+            matrix_[i][j] += other.matrix_[i][j];
+        }
+    }
+}
+
+void Matrix::SubMatrix(const Matrix &other) {
+    if (!EqualMatrix(other)) {
+        throw std::invalid_argument("\nRows and columns do not match\n");
+    }
+    for (int i = 0; i < rows_; ++i) {
+        for (int j = 0; j < cols_; ++j) {
+            matrix_[i][j] -= other.matrix_[i][j];
+        }
+    }
+}
+
+void Matrix::MulNumber(const double num) {
+    for (int i = 0; i < rows_; ++i) {
+        for (int j = 0; j < cols_; ++j) {
+            matrix_[i][j] *= num;
+        }
+    }
+}
+
+void Matrix::MulMatrix(const Matrix &other) {
+    if (cols_ != other.rows_) {
+        throw std::invalid_argument("\nWrong count of rows or columns\n");
+    }
+    Matrix Temp(rows_, other.cols_);
+
+    for (int i = 0; i < rows_; i++) {
+        for (int j = 0; j < other.cols_; j++) {
+            for (int k = 0; k < other.rows_; k++) {
+                Temp.matrix_[i][j] += matrix_[i][k] * other.matrix_[k][j];
+            }
+        }
+    }
+    MoveMatrix(Temp);
+}
+
+Matrix Matrix::Transpose() {
+    Matrix Temp(cols_, rows_);
+    for (int i = 0; i < rows_; i++) {
+        for (int j = 0; j < cols_; j++) {
+            Temp.matrix_[j][i] = matrix_[i][j];
+        }
+    }
+    return Temp;
+}
 
 Matrix Matrix::CalcComplements() {
     if (rows_ != cols_) {
@@ -186,101 +234,6 @@ Matrix Matrix::InverseMatrix() {
     return temp;
 }
 
-int Matrix::EqualMatrix(const Matrix &other) {
-    return (other.cols_ == this->cols_) && (other.rows_ == this->rows_);
-}
-
-Matrix Matrix::Transpose() {
-    Matrix Temp(cols_, rows_);
-    for (int i = 0; i < rows_; i++) {
-        for (int j = 0; j < cols_; j++) {
-            Temp.matrix_[j][i] = matrix_[i][j];
-        }
-    }
-    return Temp;
-}
-
-void Matrix::MulNumber(const double num) {
-    for (int i = 0; i < rows_; ++i) {
-        for (int j = 0; j < cols_; ++j) {
-            matrix_[i][j] *= num;
-        }
-    }
-}
-
-void Matrix::MulMatrix(const Matrix &other) {
-    if (cols_ != other.rows_) {
-        throw std::invalid_argument("\nWrong count of rows or columns\n");
-    }
-    Matrix Temp(rows_, other.cols_);
-
-    for (int i = 0; i < rows_; i++) {
-        for (int j = 0; j < other.cols_; j++) {
-            for (int k = 0; k < other.rows_; k++) {
-                Temp.matrix_[i][j] += matrix_[i][k] * other.matrix_[k][j];
-            }
-        }
-    }
-    MoveMatrix(Temp);
-}
-
-void Matrix::SumMatrix(const Matrix &other) {
-    if (!EqualMatrix(other)) {
-        throw std::invalid_argument("\nRows and columns do not match\n");
-    }
-    for (int i = 0; i < rows_; ++i) {
-        for (int j = 0; j < cols_; ++j) {
-            matrix_[i][j] += other.matrix_[i][j];
-        }
-    }
-}
-
-void Matrix::SubMatrix(const Matrix &other) {
-    if (!EqualMatrix(other)) {
-        throw std::invalid_argument("\nRows and columns do not match\n");
-    }
-    for (int i = 0; i < rows_; ++i) {
-        for (int j = 0; j < cols_; ++j) {
-            matrix_[i][j] -= other.matrix_[i][j];
-        }
-    }
-}
-
-void Matrix::CopyMatrix(const Matrix &other) {
-    for (int i = 0; i < other.rows_; i++) {
-        for (int j = 0; j < other.cols_; j++) {
-            matrix_[i][j] = other.matrix_[i][j];
-        }
-    }
-}
-
-void Matrix::MoveMatrix(Matrix &other) {
-    DestroyMatrix();
-    matrix_ = other.matrix_;
-    rows_ = other.rows_;
-    cols_ = other.cols_;
-    other.matrix_ = nullptr;
-}
-
-void Matrix::CreateMatrix() {
-    matrix_ = new double *[rows_]();
-    for (int i = 0; i < rows_; i++) {
-        matrix_[i] = new double[cols_]();
-    }
-}
-
-void Matrix::DestroyMatrix() {
-    if (matrix_) {
-        for (int i = 0; i < rows_; i++) {
-            delete[] matrix_[i];
-        }
-        delete[] matrix_;
-    }
-    matrix_ = nullptr;
-    rows_ = 0;
-    cols_ = 0;
-}
-
 // Accessors & mutators
 
 int Matrix::GetRows() const { return rows_; }
@@ -323,6 +276,57 @@ void Matrix::SetColumns(int columns) {
     CreateMatrix();
     CopyMatrix(tmpMatrix);
     tmpMatrix.~Matrix();
+}
+
+// Friend method
+
+Matrix operator*(double num, Matrix &other) {
+    Matrix resultMatrix(other);
+    resultMatrix.MulNumber(num);
+    return resultMatrix;
+}
+
+// Private methods
+
+void Matrix::CreateMatrix() {
+    matrix_ = new double *[rows_]();
+    for (int i = 0; i < rows_; i++) {
+        matrix_[i] = new double[cols_]();
+    }
+}
+
+void Matrix::DestroyMatrix() {
+    if (matrix_) {
+        for (int i = 0; i < rows_; i++) {
+            delete[] matrix_[i];
+        }
+        delete[] matrix_;
+    }
+    matrix_ = nullptr;
+    rows_ = 0;
+    cols_ = 0;
+}
+
+void Matrix::CopyMatrix(const Matrix &other) {
+    for (int i = 0; i < other.rows_; i++) {
+        for (int j = 0; j < other.cols_; j++) {
+            matrix_[i][j] = other.matrix_[i][j];
+        }
+    }
+}
+
+void Matrix::MoveMatrix(Matrix &other) {
+    DestroyMatrix();
+    matrix_ = other.matrix_;
+    rows_ = other.rows_;
+    cols_ = other.cols_;
+    other.matrix_ = nullptr;
+}
+
+void Matrix::SetNull() {
+    matrix_ = nullptr;
+    rows_ = 0;
+    cols_ = 0;
 }
 
 bool Matrix::EqMatrix(const Matrix &other) const {
