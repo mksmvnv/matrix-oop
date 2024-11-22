@@ -1,75 +1,55 @@
-# Variables
+.PHONY: all gcov_report test leaks cppcheck style format 
 
-EXE_NAME    := matrix
-LIB_NAME    := matrix_oop.a
+CC = g++
+CCFLAGS = -Wall -Werror -Wextra -g -pedantic
+COVFLAGS = -fprofile-arcs -ftest-coverage
+TESTFLAGS = -lgtest -lgtest_main
+LEAKSFLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes
+CHECKFLAGS = --enable=all --suppress=missingIncludeSystem
 
-CXX         := g++ -fdiagnostics-color=always
-CPPFLAGS    := -MMD -MP
-CXXFLAGS    := --std=c++17 -pedantic -O2 -Wall -Wextra -Werror
+LIB_NAME = matrix_oop.a
 
-BUILD_DIR   := build
-OBJ_DIR     := $(BUILD_DIR)/obj
+SRC_DIR = src
+BUILD_DIR = build
+OBJ_DIR = $(BUILD_DIR)/obj
+TEST_DIR = $(BUILD_DIR)/test
+GCOV_DIR = $(BUILD_DIR)/gcov
 
-SRC_LIB     := src/matrix_oop.cpp
-SRC_MAIN    := src/main.cpp
-SRC_TEST    := src/tests/test_matrix_oop.cpp
+$(shell mkdir -p $(OBJ_DIR) $(TEST_DIR) $(GCOV_DIR))
 
-OBJ_LIB     := $(SRC_LIB:src/%.cpp=$(OBJ_DIR)/%.o)
-OBJ_MAIN    := $(SRC_MAIN:src/%.cpp=$(OBJ_DIR)/%.o)
-OBJ_TEST    := $(SRC_TEST:tests/%.cpp=$(OBJ_DIR)/%.o)
+all: $(LIB_NAME)
 
-GTEST_FLAGS := -lgtest -lgtest_main -pthread
+gcov_report: test
+	gcov -f $(OBJ_DIR)/*.gcda
+	mv matrix_oop.cc.gcov $(GCOV_DIR)/
+	lcov -t "test" -o $(GCOV_DIR)/test.info -c -d $(OBJ_DIR) --rc branch_coverage=0
+	genhtml -o $(GCOV_DIR)/report $(GCOV_DIR)/test.info --rc branch_coverage=0
 
-# Targets
+test: $(LIB_NAME)
+	$(CC) $(CCFLAGS) -c $(SRC_DIR)/test.cc -o $(TEST_DIR)/test.o
+	$(CC) $(CCFLAGS) $(COVFLAGS) -o $(TEST_DIR)/test.out $(TEST_DIR)/test.o $(TESTFLAGS) -L. $(OBJ_DIR)/$(LIB_NAME)
+	./$(TEST_DIR)/test.out
 
-all: $(EXE_NAME) $(LIB_NAME)
+$(LIB_NAME): $(OBJ_DIR)/matrix_oop.o
+	ar rc $(OBJ_DIR)/$(LIB_NAME) $(OBJ_DIR)/matrix_oop.o
+	ranlib $(OBJ_DIR)/$(LIB_NAME)
 
-$(EXE_NAME): $(OBJ_MAIN) $(OBJ_LIB)
-	$(CXX) $^ -o $@
+$(OBJ_DIR)/matrix_oop.o:
+	$(CC) -c $(COVFLAGS) $(SRC_DIR)/matrix_oop.cc -o $(OBJ_DIR)/matrix_oop.o
 
-$(LIB_NAME): $(OBJ_LIB)
-	ar rcs $@ $^
+leaks: test
+	valgrind $(LEAKSFLAGS) ./$(TEST_DIR)/test.out
 
-$(TEST_EXE): $(OBJ_TEST) $(OBJ_LIB)
-	$(CXX) $^ $(GTEST_FLAGS) -o $@
-
-$(OBJ_DIR)/%.o: src/%.cpp
-	mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ_DIR)/%.o: tests/%.cpp
-	mkdir -p $(@D)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
-
-clean:
-	rm -vf $(OBJ_DIR)/*.o
-	rm -vf $(OBJ_DIR)/*.d
-
-fclean: clean
-	rm -vf $(EXE_NAME)
-	rm -vf $(LIB_NAME)
-	rm -vf $(TEST_EXE)
-	rm -rvf $(BUILD_DIR)
-
-rebuild: fclean all
-
-test: $(OBJ_TEST) $(OBJ_LIB)
-	$(CXX) $^ $(GTEST_FLAGS) -o $@
-
-format:
-	clang-format -i $(shell find src -type f -name "*.cpp") \
-                     $(shell find src -type f -name "*.hpp") \
-                     $(shell find src/tests -type f -name "*.cpp")
+cppcheck:
+	cppcheck $(CHECKFLAGS) $(SRC_DIR)/*.cc
 
 style:
-	clang-format -n $(shell find src -type f -name "*.cpp") \
-                     $(shell find src -type f -name "*.hpp") \
-                     $(shell find src/tests -type f -name "*.cpp")
+	clang-format -n $(SRC_DIR)/*.cc $(SRC_DIR)/*.h
+	rm -rf .clang-format
 
-valgrind: $(EXE_NAME)
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXE_NAME)
+format:
+	clang-format -i $(SRC_DIR)/*.cc $(SRC_DIR)/*.h
+	rm -rf .clang-format
 
--include $(OBJ_DIR)/*.d
-
-.PHONY: all clean fclean rebuild test style valgrind
-.SILENT: clean fclean test style valgrind
+clean:
+	rm -rf $(BUILD_DIR)
