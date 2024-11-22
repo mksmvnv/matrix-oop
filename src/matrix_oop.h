@@ -10,12 +10,14 @@
 
 class Matrix {
    public:
+    // Constructor & Destructor
     Matrix();
     Matrix(int rows, int cols);
     Matrix(const Matrix &other);
     Matrix(Matrix &&other);
     ~Matrix();
 
+    // Methods
     bool EqMatrix(const Matrix &other) const;
     void SumMatrix(const Matrix &other);
     void SubMatrix(const Matrix &other);
@@ -27,6 +29,7 @@ class Matrix {
     double Determinant();
     Matrix InverseMatrix();
 
+    // Operators
     Matrix operator+(const Matrix &other);
     Matrix operator-(const Matrix &other);
     Matrix operator=(const Matrix &other);
@@ -40,17 +43,22 @@ class Matrix {
     Matrix operator*(const double num);
     double &operator()(int rows, int columns);
 
+    // Accessors & mutators
     int GetRows() const;
     int GetCols() const;
 
     void SetRows(int rows);
     void SetColumns(int columns);
 
+    // Friend method
     friend Matrix operator*(double num, Matrix &other);
 
    private:
+    // Attributes
     int rows_, cols_;
     double **matrix_;
+
+    // Private methods
     void CreateMatrix();
     void DestroyMatrix();
     void CopyMatrix(const Matrix &other);
