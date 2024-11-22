@@ -1,19 +1,19 @@
 .PHONY: all gcov_report test leaks cppcheck style format 
 
-CC = g++
-CCFLAGS = -Wall -Werror -Wextra -g -pedantic
-COVFLAGS = -fprofile-arcs -ftest-coverage
-TESTFLAGS = -lgtest -lgtest_main
-LEAKSFLAGS = --leak-check=full --show-leak-kinds=all --track-origins=yes
-CHECKFLAGS = --enable=all --suppress=missingIncludeSystem
+CC 			= g++
+CCFLAGS 	= -Wall -Werror -Wextra -g -pedantic
+COVFLAGS 	= -fprofile-arcs -ftest-coverage
+TESTFLAGS 	= -lgtest -lgtest_main
+LEAKSFLAGS 	= --leak-check=full --show-leak-kinds=all --track-origins=yes
+CHECKFLAGS 	= --enable=all --suppress=missingIncludeSystem
 
-LIB_NAME = matrix_oop.a
+LIB_NAME 	= matrix_oop.a
 
-SRC_DIR = src
-BUILD_DIR = build
-OBJ_DIR = $(BUILD_DIR)/obj
-TEST_DIR = $(BUILD_DIR)/test
-GCOV_DIR = $(BUILD_DIR)/gcov
+SRC_DIR 	= src
+BUILD_DIR 	= build
+OBJ_DIR 	= $(BUILD_DIR)/obj
+TEST_DIR 	= $(BUILD_DIR)/test
+GCOV_DIR 	= $(BUILD_DIR)/gcov
 
 $(shell mkdir -p $(OBJ_DIR) $(TEST_DIR) $(GCOV_DIR))
 
@@ -45,11 +45,9 @@ cppcheck:
 
 style:
 	clang-format -n $(SRC_DIR)/*.cc $(SRC_DIR)/*.h
-	rm -rf .clang-format
 
 format:
 	clang-format -i $(SRC_DIR)/*.cc $(SRC_DIR)/*.h
-	rm -rf .clang-format
 
 clean:
 	rm -rf $(BUILD_DIR)
