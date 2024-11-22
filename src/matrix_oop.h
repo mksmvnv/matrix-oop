@@ -1,47 +1,62 @@
 #ifndef MATRIX_OOP_H
 #define MATRIX_OOP_H
 
-class Matrix {
- private:
-  int rows_;         // Count of rows
-  int cols_;         // Count of columns
-  double** matrix_;  // Pointer to matrix
+#include <cmath>
+#include <gtest/gtest.h>
+#include <iostream>
 
- public:
-  // Constructors and destructor
+#define EPS 1e-7
+#define S_AR 1
+
+class Matrix {
+public:
   Matrix();
   Matrix(int rows, int cols);
-  Matrix(const Matrix& other);
-  Matrix(Matrix&& other) noexcept;
+  Matrix(const Matrix &other);
+  Matrix(Matrix &&other);
   ~Matrix();
 
-  // Matrix operations
-  bool EqMatrix(const Matrix& other) const;
-  void SumMatrix(const Matrix& other);
-  void SubMatrix(const Matrix& other);
-  void MulNumber(double num);
-  void MulMatrix(const Matrix& other);
-  Matrix Transpose() const;
-  Matrix CalcComplements() const;
-  double Determinant() const;
-  Matrix InverseMatrix() const;
+  bool EqMatrix(const Matrix &other) const;
+  void SumMatrix(const Matrix &other);
+  void SubMatrix(const Matrix &other);
+  void MulNumber(const double num);
+  void MulMatrix(const Matrix &other);
+  Matrix Transpose();
+  Matrix CalcComplements();
+  Matrix Submatrix(int row, int col);
+  double Determinant();
+  Matrix InverseMatrix();
 
-  // Accessors and mutators
+  Matrix operator+(const Matrix &other);
+  Matrix operator-(const Matrix &other);
+  Matrix operator=(const Matrix &other);
+  Matrix operator=(Matrix &&other);
+  bool operator==(const Matrix &other);
+  Matrix &operator+=(const Matrix &other);
+  Matrix &operator-=(const Matrix &other);
+  Matrix &operator*=(const Matrix &other);
+  Matrix &operator*=(double num);
+  Matrix operator*(const Matrix &other);
+  Matrix operator*(const double num);
+  double &operator()(int rows, int columns);
+
   int GetRows() const;
   int GetCols() const;
-  void SetRows(int rows);
-  void SetCols(int cols);
 
-  // Operators
-  Matrix& operator=(const Matrix& other);
-  Matrix& operator+=(const Matrix& other);
-  Matrix& operator-=(const Matrix& other);
-  Matrix& operator*=(const Matrix& other);
-  Matrix operator+(const Matrix& other) const;
-  Matrix operator-(const Matrix& other) const;
-  Matrix operator*(const Matrix& other) const;
-  bool operator==(const Matrix& other) const;
-  double& operator()(int row, int col);
+  void SetRows(int rows);
+  void SetColumns(int columns);
+
+  friend Matrix operator*(double num, Matrix &other);
+
+private:
+  int rows_, cols_;
+  double **matrix_;
+  void CreateMatrix();
+  void DestroyMatrix();
+  void CopyMatrix(const Matrix &other);
+  void MoveMatrix(Matrix &other);
+  void SetNull();
+  int EqualMatrix(const Matrix &other);
 };
 
-#endif
+#endif // MATRIX_OOP_H
